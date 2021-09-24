@@ -1,0 +1,53 @@
+{
+	"emulators": {
+		"default": {
+			"port": 3569,
+			"serviceAccount": "emulator-account"
+		}
+	},
+	"contracts": {
+		"NonFungibleToken": {
+			"source": "./contracts/standard/NonFungibleToken.cdc",
+			"aliases": {
+				"testnet": "0x631e88ae7f1d7c20",
+				"mainnet": "0x1d7e57aa55817448"
+			}
+		},
+		"Collectibles": "./contracts/Collectibles.cdc",
+		"Vouchers": "./contracts/Vouchers.cdc"
+	},
+	"networks": {
+		"emulator": "127.0.0.1:3569",
+		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"testnet": "access.devnet.nodes.onflow.org:9000"
+	},
+	"accounts": {
+		"emulator-account": {
+			"address": "0xf8d6e0586b0a20c7",
+			"key": "84f82df6790f07b281adb5bbc848bd6298a2de67f94bdfac7a400d5a1b893de5"
+		},
+		"emulator-user1": {
+			"address": "0x01cf0e2f2f715450",
+			"key": "ece202e2a86612f82b8fa3197ba0319ed8e390e6ff666f07c93b4aef2c5d42a4" 
+		},
+		"testnet-account": {
+			"address": "0xa94772ec75758b54",
+			"key": "e14161dcb29775230b025594db3d7cbce20c9124069aa7dc3631319865227ad3"
+		}
+	},
+	"deployments": {
+		"emulator": {
+			"emulator-account": [
+				"NonFungibleToken",
+				"Collectibles",
+				"Vouchers"
+			]
+		},
+		"testnet": {
+			"testnet-account": [
+				"Collectibles",
+				"Vouchers"
+			]
+		}
+	}
+}

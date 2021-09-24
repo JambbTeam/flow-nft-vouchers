@@ -50,15 +50,7 @@ flow transactions send ./transactions/activateAdminProxy.cdc <proxyReceiverAddre
 
 ## Mint Vouchers and Collectibles
 ```
-flow transactions send ./transactions/mintVouchers.cdc \
-  --network emulator \
-  --arg emulator-account \
-  --signer emulator-account \
-  --gas-limit 1000
+flow transactions send ./transactions/mintVoucher.cdc <receiverAddress> --signer <admin-signer>
 
-flow transactions send ./transactions/mintCollectible.cdc \
-  --network emulator \
-  --arg emulator-account \
-  --signer emulator-account \
-  --gas-limit 1000
+flow transactions send ./transactions/mintCollectible.cdc --signer <admin-signer>
 ```

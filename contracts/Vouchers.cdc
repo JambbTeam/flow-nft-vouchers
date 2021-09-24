@@ -21,7 +21,7 @@ pub contract Vouchers: NonFungibleToken {
 
     // Contract Singletone Redeemed Voucher Collection
     pub let RedeemedCollectionPublicPath: PublicPath
-	pub let RedeemedCollectionStoragePath: StoragePath
+    pub let RedeemedCollectionStoragePath: StoragePath
 
     // AdminUser Proxy Receiver
     pub let AdminProxyStoragePath: StoragePath

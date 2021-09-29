@@ -8,12 +8,13 @@ transaction(recipient: Address, withdrawID: UInt64) {
 
         // borrow a reference to the signer's NFT collection
         let collectionRef = signer.borrow<&Collectibles.Collection>(from: Collectibles.CollectionStoragePath)
-            ?? panic("Could not borrow a reference to the owner's collection")
+            ?? panic("Could not borrow a reference to the signer's collection")
 
         // borrow a public reference to the receivers collection
-        let depositRef = recipient.getCapability(Collectibles.CollectionPublicPath)!.borrow<&{NonFungibleToken.CollectionPublic}>()!
+        let depositRef = recipient.getCapability(Collectibles.CollectionPublicPath).borrow<&{NonFungibleToken.CollectionPublic}>()
+            ?? panic("Could not borrow a reference to the recipient's collection")
 
-        // withdraw the NFT from the owner's collection
+        // withdraw the NFT from the signer's collection
         let nft <- collectionRef.withdraw(withdrawID: withdrawID)
 
         // Deposit the NFT in the recipient's collection

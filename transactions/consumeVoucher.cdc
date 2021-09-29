@@ -12,8 +12,9 @@ transaction(recipient: Address, voucherID: UInt64, rewardID: UInt64) {
         let recipient = getAccount(recipient)
 
         // borrow a public reference to the receivers collection
-        let receiver = recipient.getCapability(Collectibles.CollectionPublicPath)!.borrow<&{Collectibles.CollectionPublic}>()! 
-        
+        let receiver = recipient.getCapability(Collectibles.CollectionPublicPath).borrow<&{Collectibles.CollectionPublic}>() 
+            ?? panic("Could not borrow a reference to the recipient's collection")
+
         // get admin's Collection
         let adminCollection = admin.borrow<&NonFungibleToken.Collection>(from: Collectibles.CollectionStoragePath)
             ?? panic("Could not borrow a reference to the admin's collection")

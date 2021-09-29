@@ -6,7 +6,7 @@ transaction {
     prepare(signer: AuthAccount) {
         if signer.borrow<&Vouchers.AdminProxy>(from: Vouchers.AdminProxyStoragePath) == nil {
             // maybe dont do this by default haha but its harmless mostly
-            let adminProxy <- Vouchers.createAdminProxy() as! @Vouchers.AdminProxy
+            let adminProxy <- Vouchers.createAdminProxy()
 
             signer.save(<-adminProxy, to: Vouchers.AdminProxyStoragePath)
 

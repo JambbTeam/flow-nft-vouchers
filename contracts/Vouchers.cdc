@@ -10,10 +10,10 @@ pub contract Vouchers: NonFungibleToken {
 
     // Voucher Actions
     // Redeemed: Address to grant reward after consume
-    pub event VoucherRedeemed(id: UInt64, from: Address?) 
+    pub event Redeemed(id: UInt64, from: Address?) 
     // Consumed: Notice, Reward is not tracked. This is to simplify contract.
     // It is to be administered in the consume() tx, else thoust be punished by thine users.
-    pub event VoucherConsumed(id: UInt64)
+    pub event Consumed(id: UInt64)
 
     // Public Voucher Collection Paths
     pub let CollectionStoragePath: StoragePath
@@ -39,7 +39,7 @@ pub contract Vouchers: NonFungibleToken {
     // 
     access(contract) var metadata: {UInt64: Metadata}
 
-    // Category Definitions
+    // Voucher Type Metadata Definitions
     // 
     pub struct Metadata {
         pub let name: String
@@ -72,7 +72,7 @@ pub contract Vouchers: NonFungibleToken {
     // the Redeemed Collection of the admins of this contract
     pub fun redeem(token: @Vouchers.NFT, address: Address) {
          // emit redemption
-        emit VoucherRedeemed(id:token.id, from: address)
+        emit Redeemed(id:token.id, from: address)
         
         // establish the receiver for Redeeming Vouchers
         let receiver = Vouchers.account.getCapability<&{Vouchers.CollectionPublic}>(Vouchers.RedeemedCollectionPublicPath).borrow()!
@@ -310,7 +310,7 @@ pub contract Vouchers: NonFungibleToken {
             // discard the empty collection and the voucher
             destroy voucher
 
-            emit VoucherConsumed(id:voucherID)
+            emit Consumed(id:voucherID)
         }
     }
 

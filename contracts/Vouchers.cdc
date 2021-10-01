@@ -44,18 +44,11 @@ pub contract Vouchers: NonFungibleToken {
     pub struct Metadata {
         pub let name: String
         pub let description: String
-
-        // mediaType: MIME type of the media
-        // - image/png
-        // - image/jpeg
-        // - video/mp4
-        // - audio/mpeg
-        pub let mediaType: String
-
-        // mediaHash: IPFS storage hash
+        // MIME type: image/png, image/jpeg, video/mp4, audio/mpeg
+        pub let mediaType: String 
+        // IPFS storage hash
         pub let mediaHash: String
-
-         // mediaUri: URI to NFT media - incase IPFS not in use/avail
+        // URI to NFT media - incase IPFS not in use/avail
         pub let mediaURI: String
 
         init(name: String, description: String, mediaType: String, mediaHash: String, mediaURI: String) {
@@ -301,7 +294,9 @@ pub contract Vouchers: NonFungibleToken {
         }
 
         // consume
-        // consumes a Voucher from the Redeemed Collection by destroying it and rewarding the user with NFT(s)
+        // consumes a Voucher from the Redeemed Collection by destroying it
+        // NOTE: it is expected the consumer also rewards the redeemer their due
+        //          in the case of this repository, an NFT is included in the consume transaction
         pub fun consume(_ voucherID: UInt64) {
             // grab the voucher from the redeemed collection
             let redeemedCollection = Vouchers.account.borrow<&Vouchers.Collection>(from: Vouchers.RedeemedCollectionStoragePath)!

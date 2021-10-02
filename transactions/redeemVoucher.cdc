@@ -8,7 +8,6 @@ transaction(voucherID: UInt64) {
     prepare(signer: AuthAccount) {
         // if the account doesnt already have Collectibles setup
         if signer.borrow<&Collectibles.Collection>(from: Collectibles.CollectionStoragePath) == nil {
-
                 let collection <- Collectibles.createEmptyCollection() as! @Collectibles.Collection
 
                 signer.save(<-collection, to: Collectibles.CollectionStoragePath)
@@ -25,8 +24,6 @@ transaction(voucherID: UInt64) {
         let vouchers = signer.borrow<&Vouchers.Collection>(from: Vouchers.CollectionStoragePath)
             ?? panic("Could not borrow a reference to the owner's voucher")
 
-        let nft <- vouchers.withdraw(withdrawID: voucherID) as! @Vouchers.NFT
-
-        Vouchers.redeem(token: <- nft, collection: vouchers)
+        Vouchers.redeem(collection: vouchers, voucherID: voucherID)
     }
 }

@@ -78,16 +78,19 @@ pub contract Vouchers: NonFungibleToken {
     /// The NFT's, aka Vouchers, can be 'redeemed' into the RedeemedCollection, which
     /// will ultimately consume them to the tune of an externally agreed-upon reward.
     ///
-    pub fun redeem(token: @Vouchers.NFT, collection: &Vouchers.Collection) {
-        // store who redeemed this voucher for consumer to reward
-        Vouchers.redeemers[token.id] = collection.owner!.address
-        emit Redeemed(id:token.id)
+    pub fun redeem(collection: &Vouchers.Collection, voucherID: UInt64) {
+        // withdraw their voucher
+        let token <- collection.withdraw(withdrawID: voucherID)
         
         // establish the receiver for Redeeming Vouchers
         let receiver = Vouchers.account.getCapability<&{Vouchers.CollectionPublic}>(Vouchers.RedeemedCollectionPublicPath).borrow()!
         
-        // deposit for consumption & reward
+        // deposit for consumption
         receiver.deposit(token: <- token)
+
+        // store who redeemed this voucher for consumer to reward
+        Vouchers.redeemers[voucherID] = collection.owner!.address
+        emit Redeemed(id:voucherID)
     }
 
     // NFT

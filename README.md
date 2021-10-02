@@ -14,6 +14,8 @@ It is intended to be used for any workflow that involves a user redeeming a tran
 - Users Redeem their Vouchers (which are described in plain text by the per-type Metadata)
 - Admins consume the Redeemed Vouchers and send the Redeemer their deserved Reward
   - A notable decision was made to remove some "force admin to pay reward when consuming" code that was originally here, because it was obtusely restrictive it can be adequately managed as-is
+  - They do receive the Redeemer address when consuming, so it would be hard to ignore
+  the redeemer after that ;)
 
 ### Collectibles
 #### Sample NFT for Rewarding in Tests

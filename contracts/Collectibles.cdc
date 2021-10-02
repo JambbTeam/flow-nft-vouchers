@@ -25,18 +25,11 @@ pub contract Collectibles: NonFungibleToken {
     pub struct Metadata {
         pub let name: String
         pub let description: String
-
-        // mediaType: MIME type of the media
-        // - image/png
-        // - image/jpeg
-        // - video/mp4
-        // - audio/mpeg
-        pub let mediaType: String
-
-        // mediaHash: IPFS storage hash
+        // MIME type: image/png, image/jpeg, video/mp4, audio/mpeg
+        pub let mediaType: String 
+        // IPFS storage hash
         pub let mediaHash: String
-
-        // mediaUri: URI to NFT media - incase IPFS not in use/avail
+        // URI to NFT media - incase IPFS not in use/avail
         pub let mediaURI: String
 
         init(name: String, description: String, mediaType: String, mediaHash: String, mediaURI: String) {
@@ -226,9 +219,9 @@ pub contract Collectibles: NonFungibleToken {
     //
     init() {
         // Set our named paths
-        self.CollectionStoragePath = /storage/collectiblesCollection
-        self.CollectionPublicPath = /public/collectiblesCollection
-        self.MinterStoragePath = /storage/collectiblesMinter
+        self.CollectionStoragePath = /storage/jambbLaunchCollectiblesCollection
+        self.CollectionPublicPath = /public/jambbLaunchCollectiblesCollection
+        self.MinterStoragePath = /storage/jambbLaunchCollectiblesMinter
 
         // Initialize the total supply
         self.totalSupply = 0

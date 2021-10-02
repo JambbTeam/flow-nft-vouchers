@@ -1,29 +1,35 @@
 import NonFungibleToken from "./standard/NonFungibleToken.cdc"
 
 pub contract Vouchers: NonFungibleToken {
-    // Public Events
-    // Basics
+    // Events
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
     pub event Deposit(id: UInt64, to: Address?)
     pub event Minted(id: UInt64)
 
-    // Voucher Actions
-    // Redeemed: Address to grant reward after consume
-    pub event Redeemed(id: UInt64, from: Address?) 
-    // Consumed: Notice, Reward is not tracked. This is to simplify contract.
-    // It is to be administered in the consume() tx, else thoust be punished by thine users.
+    // Redeemed
+    // Fires when a user Redeems a Voucher, prepping
+    // it for Consumption to receive reward
+    //
+    pub event Redeemed(id: UInt64)
+
+    // Consumed
+    // Fires when an Admin consumes a Voucher, deleting it forever
+    // NOTE: Reward is not tracked. This is to simplify contract.
+    //       It is to be administered in the consume() tx, 
+    //       else thoust be punished by thine users.
+    //
     pub event Consumed(id: UInt64)
 
-    // Public Voucher Collection Paths
+    // Voucher Collection Paths
     pub let CollectionStoragePath: StoragePath
     pub let CollectionPublicPath: PublicPath
 
-    // Contract Singletone Redeemed Voucher Collection
+    // Contract-Singleton Redeemed Voucher Collection
     pub let RedeemedCollectionPublicPath: PublicPath
     pub let RedeemedCollectionStoragePath: StoragePath
 
-    // AdminUser Proxy Receiver
+    // AdminProxy Receiver
     pub let AdminProxyStoragePath: StoragePath
     pub let AdminProxyPublicPath: PublicPath
 
@@ -36,8 +42,15 @@ pub contract Vouchers: NonFungibleToken {
     //
     pub var totalSupply: UInt64
 
-    // 
+    // metadata
+    // the mapping of Voucher TypeID's to their respective Metadata
+    //
     access(contract) var metadata: {UInt64: Metadata}
+
+    // redeemed
+    // tracks currently redeemed vouchers for consumption
+    // 
+    access(contract) var redeemers: {UInt64: Address}
 
     // Voucher Type Metadata Definitions
     // 
@@ -60,12 +73,15 @@ pub contract Vouchers: NonFungibleToken {
         }
     }
 
-    // redeem
-    // a Voucher-holder can redeem their Voucher by depositing it into
-    // the Redeemed Collection of the admins of this contract
-    pub fun redeem(token: @Vouchers.NFT, address: Address) {
-         // emit redemption
-        emit Redeemed(id:token.id, from: address)
+    /// redeem(token)
+    /// This public function represents the core feature of this contract: redemptions.
+    /// The NFT's, aka Vouchers, can be 'redeemed' into the RedeemedCollection, which
+    /// will ultimately consume them to the tune of an externally agreed-upon reward.
+    ///
+    pub fun redeem(token: @Vouchers.NFT, collection: &Vouchers.Collection) {
+        // store who redeemed this voucher for consumer to reward
+        Vouchers.redeemers[token.id] = collection.owner!.address
+        emit Redeemed(id:token.id)
         
         // establish the receiver for Redeeming Vouchers
         let receiver = Vouchers.account.getCapability<&{Vouchers.CollectionPublic}>(Vouchers.RedeemedCollectionPublicPath).borrow()!
@@ -84,12 +100,13 @@ pub contract Vouchers: NonFungibleToken {
         // The token's typeID
         pub let typeID: UInt64
 
-        // Expose metadata
+        // Expose metadata of this Voucher type
+        //
         pub fun getMetadata(): Metadata? {
             return Vouchers.metadata[self.typeID]
         }
 
-        // initializer
+        // init
         //
         init(initID: UInt64, typeID: UInt64) {
             self.id = initID
@@ -178,6 +195,7 @@ pub contract Vouchers: NonFungibleToken {
         }
 
         // destructor
+        //
         destroy() {
             destroy self.ownedNFTs
         }
@@ -196,31 +214,36 @@ pub contract Vouchers: NonFungibleToken {
         return <- create Collection()
     }
 
-    // AdminProxy
-    //
-    // AdminProxy is a 1:1 shim for the Administrator resource, of which
-    // only one exists, and it is managed by the Contract Owner.
-    // 
-    // Prospective AdminUsers will create a Proxy and be granted
-    // access to the Administrator resource through their receiver.
-    // They will then simply route like-calls to that resource, which will
-    // perform the ultimately privileged actions.
+    // AdminUsers will create a Proxy and be granted
+    // access to the Administrator resource through their receiver, which
+    // they can then borrowSudo() to utilize
     //
     pub fun createAdminProxy(): @AdminProxy { 
         return <- create AdminProxy()
     }
-    
+
+    // public receiver for the Administrator capability
+    //
     pub resource interface AdminProxyPublic {
         pub fun addCapability(_ cap: Capability<&Vouchers.Administrator>)
     }
 
+    /// AdminProxy
+    /// This is a simple receiver for the Administrator resource, which
+    /// can be borrowed if capability has been established.
+    ///
     pub resource AdminProxy: AdminProxyPublic {
+        // requisite receiver of Administrator capability
         access(self) var sudo: Capability<&Vouchers.Administrator>?
+        
+        // initializer
+        //
         init () {
             self.sudo = nil
         }
 
         // must receive capability to take administrator actions
+        //
         pub fun addCapability(_ cap: Capability<&Vouchers.Administrator>){ 
             pre {
                 cap.check() : "Invalid Administrator capability"
@@ -229,37 +252,26 @@ pub contract Vouchers: NonFungibleToken {
             self.sudo = cap
         }
 
-        //
-        // these are direct passthroughs to the actual administrator resource
-        //
-
-        pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}, typeID: UInt64) {
+        // borrow a reference to the Administrator
+        // 
+        pub fun borrowSudo(): &Vouchers.Administrator {
             pre {
                 self.sudo != nil : "Your AdminProxy has no Administrator capabilities."
             }
-            self.sudo!.borrow()!.mintNFT(recipient: recipient, typeID: typeID)
-        }
+            let sudoReference = self.sudo!.borrow()
+                ?? panic("Your AdminProxy has no Administrator capabilities.")
 
-        pub fun consume(_ voucherID: UInt64) {
-            pre {
-                self.sudo != nil : "Your AdminProxy has no Administrator capabilities."
-            }
-            self.sudo!.borrow()!.consume(voucherID)
-        }
-
-        pub fun registerMetadata(typeID: UInt64, metadata: Metadata) {
-            pre {
-                self.sudo != nil : "Your AdminProxy has no Administrator capabilities."
-            }
-            self.sudo!.borrow()!.registerMetadata(typeID: typeID, metadata: metadata)
+            return sudoReference
         }
     }
 
-    // Administrator - Root-owned resource, Privately grants Capabilities to Public Receivers
+    /// Administrator
+    /// Deployer-owned resource that Privately grants Capabilities to Proxies
+    /// Can Mint Voucher NFT's, register their Metadata, and Consume them from the Redeemed Collection
     pub resource Administrator {
         // mintNFT
         // Mints a new NFT with a new ID
-        // and deposit it in the recipients collection using their collection reference
+        // and deposits it in the recipients collection using their collection reference
         //
         pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}, typeID: UInt64) {
             emit Minted(id: Vouchers.totalSupply)
@@ -271,7 +283,7 @@ pub contract Vouchers: NonFungibleToken {
 
         // batchMintNFT
         // Mints a batch of new NFTs
-        // and deposit it in the recipients collection using their collection reference
+        // and deposits them in the recipients collection using their collection reference
         //
         pub fun batchMintNFT(recipient: &{NonFungibleToken.CollectionPublic}, typeID: UInt64, count: Int) {
             var index = 0
@@ -297,15 +309,16 @@ pub contract Vouchers: NonFungibleToken {
         // consumes a Voucher from the Redeemed Collection by destroying it
         // NOTE: it is expected the consumer also rewards the redeemer their due
         //          in the case of this repository, an NFT is included in the consume transaction
-        pub fun consume(_ voucherID: UInt64) {
+        pub fun consume(_ voucherID: UInt64): Address {
             // grab the voucher from the redeemed collection
             let redeemedCollection = Vouchers.account.borrow<&Vouchers.Collection>(from: Vouchers.RedeemedCollectionStoragePath)!
-            let voucher <- redeemedCollection.withdraw(withdrawID: voucherID)!
+            let voucher <- redeemedCollection.withdraw(withdrawID: voucherID)
             
             // discard the empty collection and the voucher
             destroy voucher
 
             emit Consumed(id:voucherID)
+            return Vouchers.redeemers[voucherID]!
         }
     }
 
@@ -317,7 +330,7 @@ pub contract Vouchers: NonFungibleToken {
     //
     pub fun fetch(_ from: Address, itemID: UInt64): &Vouchers.NFT? {
         let collection = getAccount(from)
-            .getCapability(Vouchers.CollectionPublicPath)!
+            .getCapability(Vouchers.CollectionPublicPath)
             .borrow<&Vouchers.Collection>()
             ?? panic("Couldn't get collection")
         // We trust Vouchers.Collection.borrowVoucher to get the correct itemID
@@ -335,26 +348,26 @@ pub contract Vouchers: NonFungibleToken {
     // initializer
     //
     init() {
-        // these paths are for any user to hold a Collection of Vouchers
-        self.CollectionStoragePath = /storage/vouchersCollection
-        self.CollectionPublicPath = /public/vouchersCollection
+        self.CollectionStoragePath = /storage/jambbLaunchVouchersCollection
+        self.CollectionPublicPath = /public/jambbLaunchVouchersCollection
 		
-        // only one redeemedCollection should ever exist, in the Administrator/Root storage
-        self.RedeemedCollectionStoragePath = /storage/redeemedCollection
-        // the public path will only be for nft deposits
-        self.RedeemedCollectionPublicPath = /public/redeemedCollection
+        // only one redeemedCollection should ever exist, in the deployer storage
+        self.RedeemedCollectionStoragePath = /storage/jambbLaunchVouchersRedeemedCollection
+        self.RedeemedCollectionPublicPath = /public/jambbLaunchVouchersRedeemedCollection
         
-        self.AdministratorStoragePath = /storage/vouchersAdministrator
-        self.AdministratorPrivatePath = /private/vouchersAdministrator
+        // only one Administrator should ever exist, in deployer storage
+        self.AdministratorStoragePath = /storage/jambbLaunchVouchersAdministrator
+        self.AdministratorPrivatePath = /private/jambbLaunchVouchersAdministrator
 
-        self.AdminProxyPublicPath = /public/adminProxy
-        self.AdminProxyStoragePath = /storage/adminProxy
+        self.AdminProxyPublicPath = /public/jambbLaunchVouchersAdminProxy
+        self.AdminProxyStoragePath = /storage/jambbLaunchVouchersAdminProxy
 
         // Initialize the total supply
         self.totalSupply = 0
 
         // Initialize predefined metadata
         self.metadata = {}
+        self.redeemers = {}
 
         // Create a NFTAdministrator resource and save it to storage
         let admin <- create Administrator()

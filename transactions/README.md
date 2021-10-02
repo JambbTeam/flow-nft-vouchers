@@ -9,8 +9,7 @@ them when their Voucher is inevitably Consumed.
 ### Redeem Voucher
 Withdraws from Voucher Collection and sends to the RedeemedCollection for Consumption
 ```
-flow transactions send ./transactions/redeemVoucher.cdc <voucherID> \
-  --signer emulator-account
+flow transactions send ./transactions/redeemVoucher.cdc <voucherID>
 ```
 
 ### Consume Voucher
@@ -18,7 +17,7 @@ flow transactions send ./transactions/redeemVoucher.cdc <voucherID> \
 Admin grabs Reward from CollectiblesCollection and sends to Receiver while consuming 
 their Voucher from the contract's RedeemedCollection
 ```
-flow transactions send ./transactions/consumeVoucher.cdc <receiverAddress> <voucherID> <rewardID>
+flow transactions send ./transactions/consumeVoucher.cdc <voucherID> `[rewardID1, rewardID2, ...]`
 ```
 
 ## Init Steps
@@ -49,8 +48,9 @@ flow transactions send ./transactions/activateAdminProxy.cdc <proxyReceiverAddre
 ```
 
 ## Mint Vouchers and Collectibles
+### they take arrays of strings as metadata for now
 ```
-flow transactions send ./transactions/mintVoucher.cdc <receiverAddress> --signer <admin-signer>
+flow transactions send ./transactions/mintVouchers.cdc <numToMint> <typeID> '["name","descrip","mediaType","mediaHash","mediaURI"]' --signer <admin-signer>
 
-flow transactions send ./transactions/mintCollectible.cdc --signer <admin-signer>
+flow transactions send ./transactions/mintCollectible.cdc '["name","descrip","mediaType","mediaHash","mediaURI"]' --signer <admin-signer>
 ```

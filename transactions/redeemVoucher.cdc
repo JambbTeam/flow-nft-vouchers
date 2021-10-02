@@ -27,6 +27,6 @@ transaction(voucherID: UInt64) {
 
         let nft <- vouchers.withdraw(withdrawID: voucherID) as! @Vouchers.NFT
 
-        Vouchers.redeem(token: <- nft, address: redeemer)
+        Vouchers.redeem(token: <- nft, collection: vouchers)
     }
 }

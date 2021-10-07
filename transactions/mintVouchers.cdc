@@ -14,7 +14,7 @@ Vouchers.Metadata(
 // This is a batched transaction, and as such assumes it will update metadata for that type
 // If you are minting additional of prior Vouchers, keep metadata consistent, as it
 // will be set by this transaction
-transaction(count: Int, typeID: UInt64, metadata: [String]) {
+transaction(count: Int, typeID: UInt64, updateMetadata: Bool, metadata: [String]?) {
     prepare(signer: AuthAccount) {
         let proxy = signer
             .borrow<&Vouchers.AdminProxy>(from: Vouchers.AdminProxyStoragePath)
@@ -24,12 +24,16 @@ transaction(count: Int, typeID: UInt64, metadata: [String]) {
         let recipCollection = signer.borrow<&{NonFungibleToken.CollectionPublic}>
             (from: Vouchers.CollectionStoragePath)!
         
-        // this is hokey, but functional for the time being, but not tenable for long-term pattern
-        let voucherMetadata = Vouchers.Metadata(name: metadata[0], description: metadata[1], 
-            mediaType: metadata[2], mediaHash: metadata[3], mediaURI: metadata[4])
-
+        
         minter.batchMintNFT(recipient: recipCollection, typeID: typeID, count: count)
-        minter.registerMetadata(typeID:typeID, metadata: voucherMetadata)
+        
+        // this is hokey, but functional for the time being, but not tenable for long-term pattern
+        if (updateMetadata == true) {
+            let voucherMetadata = Vouchers.Metadata(name: metadata![0], description: metadata![1], 
+                mediaType: metadata![2], mediaHash: metadata![3], mediaURI: metadata![4])
+
+            minter.registerMetadata(typeID:typeID, metadata: voucherMetadata)
+        }
     }
 }
  

@@ -1,13 +1,12 @@
 import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
 import Vouchers from "../contracts/Vouchers.cdc"
 
-// transaction(recipients: [Address], withdrawIDs: [UInt64]) { TODO
-transaction () { // TESTING THROUGHPUT
+transaction(recipient: Address, withdrawStartingID: UInt64, count: Int) {
     let adminCollection: &Vouchers.Collection
     let recipient: &{Vouchers.CollectionPublic}
     prepare(signer: AuthAccount) {
         // get the recipients public account object
-        self.recipient = getAccount(0xe94a6e229293f196).getCapability(Vouchers.CollectionPublicPath).borrow<&{Vouchers.CollectionPublic}>()
+        self.recipient = getAccount(recipient).getCapability(Vouchers.CollectionPublicPath).borrow<&{Vouchers.CollectionPublic}>()
             ?? panic("Could not borrow a reference to the recipient's collection")
 
         // borrow a reference to the signer's NFT collection
@@ -17,10 +16,12 @@ transaction () { // TESTING THROUGHPUT
 
     execute {
         var i = 0
-        while i < 500 {
+        var id = withdrawStartingID
+        while i < count {
             // Deposit the NFT in the recipient's collection
-            self.recipient.deposit(token: <- self.adminCollection.withdraw(withdrawID: UInt64(i)))
+            self.recipient.deposit(token: <- self.adminCollection.withdraw(withdrawID: id))
             i = i + 1
+            id = id + 1
         }
     }
 }

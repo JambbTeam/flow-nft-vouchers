@@ -1,13 +1,16 @@
 import NonFungibleToken from "../contracts/standard/NonFungibleToken.cdc"
 import Vouchers from "../contracts/Vouchers.cdc"
 
-transaction(recipient: Address, withdrawStartingID: UInt64, count: Int) {
+transaction(recipients: [Address], rewards: {Address: [UInt64]}) {
     let adminCollection: &Vouchers.Collection
-    let recipient: &{Vouchers.CollectionPublic}
+    let recipientCollections: {Address: &{Vouchers.CollectionPublic}}
     prepare(signer: AuthAccount) {
+        self.recipientCollections = {}
         // get the recipients public account object
-        self.recipient = getAccount(recipient).getCapability(Vouchers.CollectionPublicPath).borrow<&{Vouchers.CollectionPublic}>()
-            ?? panic("Could not borrow a reference to the recipient's collection")
+        for address in recipients {
+            self.recipientCollections[address] = getAccount(address).getCapability(Vouchers.CollectionPublicPath).borrow<&{Vouchers.CollectionPublic}>()
+                ?? panic("Could not borrow a reference to the recipient's collection")
+        }
 
         // borrow a reference to the signer's NFT collection
         self.adminCollection = signer.borrow<&Vouchers.Collection>(from: Vouchers.CollectionStoragePath)
@@ -15,13 +18,14 @@ transaction(recipient: Address, withdrawStartingID: UInt64, count: Int) {
     }
 
     execute {
-        var i = 0
-        var id = withdrawStartingID
-        while i < count {
-            // Deposit the NFT in the recipient's collection
-            self.recipient.deposit(token: <- self.adminCollection.withdraw(withdrawID: id))
-            i = i + 1
-            id = id + 1
+        for address in recipients {
+            if (rewards[address] != nil) {
+                let rewards = rewards[address] as! [UInt64]
+                for reward in rewards {
+                    self.recipientCollections[address]!.deposit(token: <- self.adminCollection.withdraw(withdrawID: reward))
+                }
+            }
         }
     }
 }
+ 

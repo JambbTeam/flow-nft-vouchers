@@ -28,7 +28,7 @@
 		},
 		"emulator-user1": {
 			"address": "0x01cf0e2f2f715450",
-			"key": "ece202e2a86612f82b8fa3197ba0319ed8e390e6ff666f07c93b4aef2c5d42a4" 
+			"key": "84f82df6790f07b281adb5bbc848bd6298a2de67f94bdfac7a400d5a1b893de5"
 		},
 		"testnet-account": {
 			"address": "0xe94a6e229293f196",
@@ -45,7 +45,8 @@
 				"NonFungibleToken",
 				"Collectibles",
 				"Vouchers"
-			]
+			],
+			"emulator-user1" : []
 		},
 		"testnet": {
 			"testnet-account": [

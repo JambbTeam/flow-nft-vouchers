@@ -24,5 +24,6 @@ Collectibles is a straight-forward implementation of an NFT featuring individual
 
 ## How to test with gwtf
  - install go 1.17
+ - run `go mod tidy`
  - terminal 1: start emulator `flow emulator -v`
  - terminal 2: `go run tasks/demo/main.go`

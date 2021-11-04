@@ -27,3 +27,9 @@ Collectibles is a straight-forward implementation of an NFT featuring individual
  - run `go mod tidy`
  - terminal 1: start emulator `flow emulator -v`
  - terminal 2: `go run tasks/demo/main.go`
+
+## Tasks
+ - add vouchers here
+ - add npm package
+  
+ 

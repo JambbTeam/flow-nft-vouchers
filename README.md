@@ -8,6 +8,12 @@ Vouchers implement the concept of shared metadata across a given type (per-ID), 
 It uses the NFT standard and has no dependency on Collectibles as its reward type, that is merely what is used in the transaction examples given. 
 It is intended to be used for any workflow that involves a user redeeming a transient asset, supposedly for something in return.
 
+`Vouchers.cdc`
+| Network | Contract Address     |
+|---------|----------------------|
+| Testnet | `0xe94a6e229293f196` |
+| Mainnet | `0x444f5ea22c6ea12c` |
+
 ### Redeem & Consume Workflow
 - Vouchers are Minted and sent to Users
 - Collectibles are Minted and held by Admins
